@@ -85,9 +85,10 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         if (!file.exists(file.path(destination.folder))) {
             dir.create(file.path(destination.folder),
                        recursive = TRUE)
-        } else {
-            stop(.wrap("The folder",
-                       sQuote(file.path(destination.folder, "CNAprofiles")),
+            dir.create(file.path(destination.folder, "BamBaiPeaksFiles"),
+                       recursive = TRUE)
+        } else if (!keep.intermediary.files) {
+            stop(.wrap("The folder", sQuote(destination.folder),
                        "already exists. Please remove it, or (in case you",
                        "still need it), rename it to prevent files from being",
                        "overwritten."))
@@ -97,8 +98,6 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                    "folder. Stopping execution of the remaining part of the",
                    "script..."))
     })
-    dir.create(file.path(destination.folder, "BamBaiPeaksFiles"),
-               recursive = TRUE)
 
     ## Provide output to log
     flog.appender(appender.file(file.path(destination.folder,
