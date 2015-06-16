@@ -133,7 +133,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
     tryCatch({
         for (samp in sample.paths) {
-            header <- Rsamtools::scanBamHeader(samp)
+            header <- scanBamHeader(samp)
             chr.sort.mode <- c(chr.sort.mode, list(header[[1]]$text$'@HD'))
             current.chr.names <- names(header[[1]]$targets)
     				chr.names <- c(chr.names, list(current.chr.names))
@@ -204,8 +204,8 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                        ".bam files are located."))
         }
         IndexBam <- function(sample.paths) {
+            indexBam(sample.paths)
             paste0("indexBam(\"", sample.paths, "\")")
-            Rsamtools::indexBam(sample.paths)
         }
         to.log <- bplapply(sample.paths, IndexBam, BPPARAM = bp.param)
         lapply(to.log, flog.info)
@@ -214,10 +214,10 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     ## Check whether BAMs are paired-end
     NumberPairedEndReads <- function(sample.paths) {
     
-        bam <- open(Rsamtools::BamFile(sample.paths, yieldSize = 1))
+        bam <- open(BamFile(sample.paths, yieldSize = 1))
         close(bam)
         what <- c("flag")
-        param <- Rsamtools::ScanBamParam(what = what)
+        param <- ScanBamParam(what = what)
         bam <- readGAlignments(bam, param = param)
         intToBits(mcols(bam)$flag)[1] == 01
     }
@@ -235,12 +235,12 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                             is.paired.end) {
 
         if (is.paired.end[i]) {
-            flag <- Rsamtools::scanBamFlag(isProperPair = TRUE)
-            param <- Rsamtools::ScanBamParam(flag = flag, what = "mapq")
+            flag <- scanBamFlag(isProperPair = TRUE)
+            param <- ScanBamParam(flag = flag, what = "mapq")
             filter <- FilterRules(list(isHighQual = function(x) {
                 x$mapq >= 37
             }))
-            Rsamtools::filterBam(sample.paths[i], file.path(destination.folder,
+            filterBam(sample.paths[i], file.path(destination.folder,
                                                  "BamBaiPeaksFiles",
                                                  gsub(".bam$",
                                                       "_properreads.bam",
@@ -253,11 +253,11 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                    "\", filter = filter, indexDestination = TRUE, ",
                    "param = param)")
         } else {
-            param <- Rsamtools::ScanBamParam(what = "mapq")
+            param <- ScanBamParam(what = "mapq")
             filter <- FilterRules(list(isHighQual = function(x) {
                 x$mapq >= 37
             }))
-            Rsamtools::filterBam(sample.paths[i], file.path(destination.folder,
+            filterBam(sample.paths[i], file.path(destination.folder,
                                                  "BamBaiPeaksFiles",
                                                  gsub(".bam$",
                                                       "_properreads.bam",
@@ -277,7 +277,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
     ## Read count statistics
     Stats.1 <- function(sample.paths) {
-        Rsamtools::countBam(sample.paths)
+        countBam(sample.paths)
     }
     rcfile <- file.path(destination.folder, "res.Rdata")
     if (file.exists(rcfile)) {
@@ -301,7 +301,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
     ## Read count statistics
     Stats.2 <- function(sample.files) {
-        Rsamtools::countBam(sample.files)$records
+        countBam(sample.files)$records
     }
     if (!any(grepl("records", names(res)))) {
         res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
@@ -325,12 +325,12 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
         ## Initialize
         merged.bed <- NULL
-        chromosomes <- Rsamtools::scanBamHeader(sample.files[control.uniq.indices])[[1]][["targets"]]
+        chromosomes <- scanBamHeader(sample.files[control.uniq.indices])[[1]][["targets"]]
         chromosomes <- chromosomes[names(chromosomes) %in% used.chromosomes]
-        cov.all <- coverage(Rsamtools::BamFile(sample.files[control.uniq.indices]))
+        cov.all <- coverage(BamFile(sample.files[control.uniq.indices]))
         
         ## Obtain read length
-        bam <- open(Rsamtools::BamFile(sample.files[control.uniq.indices], yieldSize = 1))
+        bam <- open(BamFile(sample.files[control.uniq.indices], yieldSize = 1))
         close(bam)
         bam <- readGAlignments(bam)
         read.length <- qwidth(bam)[1]
@@ -498,11 +498,11 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
     ## Read count statistics
     Stats.3 <- function(sample.files, GC.mappa.grange) {
-        all.reads <- Rsamtools::countBam(sample.files)$records
+        all.reads <- countBam(sample.files)$records
         which <- reduce(GC.mappa.grange)
         what <- c("pos")
-        param <- Rsamtools::ScanBamParam(which = which, what = what)
-        chrom.reads <- Rsamtools::countBam(file = sample.files, param = param)
+        param <- ScanBamParam(which = which, what = what)
+        chrom.reads <- countBam(file = sample.files, param = param)
         chrom.reads <- sum(chrom.reads$records)
         c(all.reads = all.reads, chrom.reads = chrom.reads)
     }
@@ -541,13 +541,13 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         }
 
         # countBam on remainder of bins
-        param <- Rsamtools::ScanBamParam(which = outside.peak.grange, what = c("pos"))
-        counts <- Rsamtools::countBam(sample.files[sample.indices[i]], param = param)
+        param <- ScanBamParam(which = outside.peak.grange, what = c("pos"))
+        counts <- countBam(sample.files[sample.indices[i]], param = param)
 
         # countBam on remainder of bins
-        param <- Rsamtools::ScanBamParam(which = reduce(outside.peak.grange),
+        param <- ScanBamParam(which = reduce(outside.peak.grange),
                               what = c("pos"))
-        counts.CopywriteR <- Rsamtools::countBam(sample.files[sample.indices[i]],
+        counts.CopywriteR <- countBam(sample.files[sample.indices[i]],
                                       param = param)
         counts.CopywriteR <- sum(counts.CopywriteR$records)
 
