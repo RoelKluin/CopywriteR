@@ -214,7 +214,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     ## Check whether BAMs are paired-end
     NumberPairedEndReads <- function(sample.paths) {
     
-        bam <- open(BamFile(sample.paths, yieldSize = 1))
+        bam <- open(Rsamtools::BamFile(sample.paths, yieldSize = 1))
         close(bam)
         what <- c("flag")
         param <- Rsamtools::ScanBamParam(what = what)
@@ -330,7 +330,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         cov.all <- coverage(Rsamtools::BamFile(sample.files[control.uniq.indices]))
         
         ## Obtain read length
-        bam <- open(BamFile(sample.files[control.uniq.indices], yieldSize = 1))
+        bam <- open(Rsamtools::BamFile(sample.files[control.uniq.indices], yieldSize = 1))
         close(bam)
         bam <- readGAlignments(bam)
         read.length <- qwidth(bam)[1]
