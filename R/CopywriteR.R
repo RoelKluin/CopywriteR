@@ -612,6 +612,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                            "; number of bins = ", nrow(counts)),
                     counts.CopywriteR))
     }
+    print(res); ## XXX remove
     res <- bplapply(i, CalculateDepthOfCoverage, sample.files, control.indices,
                     sample.indices, GC.mappa.grange, bin.size,
                     BPPARAM = bp.param)
@@ -624,6 +625,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                                               read.counts$End))
     ## ‘Map’ applies a function to the corresponding elements of given vectors.
     res <- do.call(Map, c(cbind, res))
+    print(res); ## XXX remove
     read.counts <- cbind(read.counts[, ], Reduce(cbind, res[1:3]))
 
     ## Remove potential NAs introduced by peaks spanning entire bins
