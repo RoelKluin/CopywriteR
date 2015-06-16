@@ -147,7 +147,7 @@ plotCNA <- function(destination.folder, smoothed = TRUE, sample.plot, y.min,
 
     ## Calculate the chromosome lengths from the bin.bed file
     chrom.lengths <-
-        scanBamHeader(inputStructure$sample.control$samples[1])[[1]]$targets
+        Rsamtools::scanBamHeader(inputStructure$sample.control$samples[1])[[1]]$targets
     names(chrom.lengths) <- gsub(prefix, "", names(chrom.lengths))    
     chrom.lengths <- data.frame(Chromosome = names(chrom.lengths),
                                 Length = chrom.lengths, row.names = NULL,
