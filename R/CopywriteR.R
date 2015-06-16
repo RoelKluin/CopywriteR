@@ -281,7 +281,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     }
     rcfile <- file.path(destination.folder, "res.Rdata")
     if (file.exists(rcfile)) {
-        res <- load(rcfile);
+        load(rcfile);
     } else {
         res <- bplapply(sample.paths, Stats.1, BPPARAM = bp.param)
         res <- Reduce(function(x,y) {rbind(x,y)}, res)
