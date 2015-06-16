@@ -279,8 +279,14 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     Stats.1 <- function(sample.paths) {
         countBam(sample.paths)
     }
-    res <- bplapply(sample.paths, Stats.1, BPPARAM = bp.param)
-    res <- Reduce(function(x,y) {rbind(x,y)}, res)
+    rcfile <- file.path(destination.folder, "res.Rdata")
+    if (file.exists(rcfile)) {
+        res <- load(rcfile);
+    } else {
+        res <- bplapply(sample.paths, Stats.1, BPPARAM = bp.param)
+        res <- Reduce(function(x,y) {rbind(x,y)}, res)
+        save(res, file=rcfile)
+    }
     statistics <- res[, "records", drop = FALSE]
     rownames(statistics) <- sample.files
     statistics[, "total"] <- statistics$records
@@ -297,8 +303,11 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     Stats.2 <- function(sample.files) {
         countBam(sample.files)$records
     }
-    res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
-    res <- Reduce(function(x,y) {rbind(x,y)}, res)
+    if (!any(grepl("records", names(res)))) {
+        res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
+        res <- Reduce(function(x,y) {rbind(x,y)}, res)
+        save(res, file=rcfile)
+    }
     statistics[, "total.properreads"] <- res
 
     ## Create list with numbers of controls
@@ -497,8 +506,11 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         chrom.reads <- sum(chrom.reads$records)
         c(all.reads = all.reads, chrom.reads = chrom.reads)
     }
-    res <- bplapply(sample.files, Stats.3, GC.mappa.grange, BPPARAM = bp.param)
-    res <- res <- data.frame(do.call(Map, c(rbind, res)))
+    if (!any(grepl("chrom.reads", names(res)))) {
+        res <- bplapply(sample.files, Stats.3, GC.mappa.grange, BPPARAM = bp.param)
+        res <- res <- data.frame(do.call(Map, c(rbind, res)))
+        save(res, file=rcfile)
+    }
     statistics[, "unmappable.or.mitochondrial"] <- res$all.reads - res$chrom.reads
     statistics[, "on.chromosomes"] <- res$chrom.reads
 
