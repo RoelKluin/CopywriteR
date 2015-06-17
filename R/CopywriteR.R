@@ -324,7 +324,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                             used.chromosomes, .peakCutoff, destination.folder) {
 
 		peaksfile <- file.path(destination.folder, "BamBaiPeaksFiles",
-										paste0("peaks", control.uniq.indices, ".bed")
+										paste0("peaks", control.uniq.indices, ".bed"))
 		if (file.exists(peaksfile) && keep.intermediary.files) {
 			if (verbosity > 5) {
 				print(paste("Analysis for", peaksfile, "was already done."))
