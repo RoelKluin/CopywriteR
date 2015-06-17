@@ -503,11 +503,13 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     # current.bp.param <- bp.param
     # bp.param$workers <- ifelse(bp.param$workers < length(control.uniq.indices),
     #                           bp.param$workers, length(control.uniq.indices))
-	print("Running DetectPeaks");
-    to.log <- bplapply(control.uniq.indices, DetectPeaks, sample.files,
-                       prefixes[1], chromosomes, .peakCutoff,
-                       destination.folder, BPPARAM = bp.param)
-    print("Running DetectPeaks done");
+	if (!any(grepl("chrom\\.reads", names(res)))) {
+		print("Running DetectPeaks");
+		to.log <- bplapply(control.uniq.indices, DetectPeaks, sample.files,
+						   prefixes[1], chromosomes, .peakCutoff,
+						   destination.folder, BPPARAM = bp.param)
+    	print("Running DetectPeaks done");
+	}
     # bp.param <- current.bp.param
     lapply(to.log, flog.info)
 
