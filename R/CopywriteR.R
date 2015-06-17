@@ -213,7 +213,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
     ## Check whether BAMs are paired-end
     NumberPairedEndReads <- function(sample.paths) {
-    
+
         bam <- open(BamFile(sample.paths, yieldSize = 1))
         close(bam)
         what <- c("flag")
@@ -221,16 +221,6 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         bam <- readGAlignments(bam, param = param)
         intToBits(mcols(bam)$flag)[1] == 01
     }
-    is.paired.end <- bplapply(sample.paths, NumberPairedEndReads,
-                              BPPARAM = bp.param)
-    is.paired.end <- unlist(is.paired.end)
-    for (i in seq_along(sample.files)) {
-        flog.info(paste0("Paired-end sequencing for sample ", sample.files[i],
-                         ": ", is.paired.end[i]))
-    }
-
-    ## Remove anomalous reads and reads with Phred < 37
-    i <- c(seq_along(sample.paths))
     ProperReads <- function(i, sample.paths, destination.folder, sample.files,
                             is.paired.end) {
 
@@ -271,20 +261,30 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                    "param = param)")
         }
     }
-    to.log <- bplapply(i, ProperReads, sample.paths, destination.folder,
-                       sample.files, is.paired.end, BPPARAM = bp.param)
-    lapply(to.log, flog.info)
-
     ## Read count statistics
     Stats.1 <- function(sample.paths) {
         countBam(sample.paths)
     }
+
     rcfile <- file.path(destination.folder, "res.Rdata")
     if (file.exists(rcfile)) {
         load(rcfile);
     } else {
         res <- bplapply(sample.paths, Stats.1, BPPARAM = bp.param)
         res <- Reduce(function(x,y) {rbind(x,y)}, res)
+		is.paired.end <- bplapply(sample.paths, NumberPairedEndReads,
+								  BPPARAM = bp.param)
+		is.paired.end <- unlist(is.paired.end)
+		for (i in seq_along(sample.files)) {
+			flog.info(paste0("Paired-end sequencing for sample ", sample.files[i],
+							 ": ", is.paired.end[i]))
+
+		## Remove anomalous reads and reads with Phred < 37
+		i <- c(seq_along(sample.paths))
+		to.log <- bplapply(i, ProperReads, sample.paths, destination.folder,
+						   sample.files, is.paired.end, BPPARAM = bp.param)
+		lapply(to.log, flog.info)
+
         save(res, file=rcfile)
     }
     statistics <- res[, "records", drop = FALSE]
