@@ -307,6 +307,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         countBam(sample.files)$records
     }
     if (!any(grepl("total|chrom\\.reads", names(res)))) {
+		print("running Stats.2");
         res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
         res <- Reduce(function(x,y) {rbind(x,y)}, res)
         save(res, file=rcfile)
@@ -321,6 +322,15 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     ## Call peaks in .bam file of control sample
     DetectPeaks <- function(control.uniq.indices, sample.files, prefix,
                             used.chromosomes, .peakCutoff, destination.folder) {
+
+		peaksfile <- file.path(destination.folder, "BamBaiPeaksFiles",
+										paste0("peaks", control.uniq.indices, ".bed")
+		if (file.exists(peaksfile) && keep.intermediary.files) {
+			if (verbosity > 5) {
+				print(paste("Analysis for", peaksfile, "was already done."))
+			}
+			return;
+		}
 
         ## j represents the minimal peak width
         j <- 100
@@ -481,12 +491,8 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         }
 
         ## Write data
-        write.table(merged.bed, file = file.path(destination.folder,
-                                                 "BamBaiPeaksFiles",
-                                                 paste0("peaks",
-                                                        control.uniq.indices,
-                                                        ".bed")), sep = "\t", 
-                    row.names = FALSE, col.names = FALSE, quote = FALSE)
+        write.table(merged.bed, file = peaksfile, sep = "\t", row.names = FALSE,
+                                               col.names = FALSE, quote = FALSE)
 
         paste0("Analysis of peaks in sample ",
                sample.files[control.uniq.indices],
@@ -495,6 +501,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     # current.bp.param <- bp.param
     # bp.param$workers <- ifelse(bp.param$workers < length(control.uniq.indices),
     #                           bp.param$workers, length(control.uniq.indices))
+	print("Running DetectPeaks");
     to.log <- bplapply(control.uniq.indices, DetectPeaks, sample.files,
                        prefixes[1], chromosomes, .peakCutoff,
                        destination.folder, BPPARAM = bp.param)
@@ -512,6 +519,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         c(all.reads = all.reads, chrom.reads = chrom.reads)
     }
     if (!any(grepl("chrom\\.reads", names(res)))) {
+		print("running Stats.3");
         res <- bplapply(sample.files, Stats.3, GC.mappa.grange, BPPARAM = bp.param)
         res <- res <- data.frame(do.call(Map, c(rbind, res)))
         save(res, file=rcfile)
@@ -620,6 +628,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
                     counts.CopywriteR))
     }
     print(res); ## XXX remove
+	print("running CalculateDepthOfCoverage");
     res <- bplapply(i, CalculateDepthOfCoverage, sample.files, control.indices,
                     sample.indices, GC.mappa.grange, bin.size,
                     BPPARAM = bp.param)
