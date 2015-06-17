@@ -329,6 +329,8 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 			if (verbosity > 5) {
 				print(paste("Analysis for", peaksfile, "was already done."))
 			}
+			read.delim(header=FALSE, stringsAsFactors = FALSE)
+			merged.bed <- read.delim(header=FALSE, stringsAsFactors=FALSE)
 			return;
 		}
 
@@ -505,6 +507,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     to.log <- bplapply(control.uniq.indices, DetectPeaks, sample.files,
                        prefixes[1], chromosomes, .peakCutoff,
                        destination.folder, BPPARAM = bp.param)
+    print("Running DetectPeaks done");
     # bp.param <- current.bp.param
     lapply(to.log, flog.info)
 
