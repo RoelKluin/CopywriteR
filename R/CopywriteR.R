@@ -306,7 +306,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     Stats.2 <- function(sample.files) {
         countBam(sample.files)$records
     }
-    if (!any(grepl("total", names(res)))) {
+    if (!any(grepl("total|chrom\\.reads", names(res)))) {
         res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
         res <- Reduce(function(x,y) {rbind(x,y)}, res)
         save(res, file=rcfile)
@@ -511,7 +511,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         chrom.reads <- sum(chrom.reads$records)
         c(all.reads = all.reads, chrom.reads = chrom.reads)
     }
-    if (!any(grepl("chrom.reads", names(res)))) {
+    if (!any(grepl("chrom\\.reads", names(res)))) {
         res <- bplapply(sample.files, Stats.3, GC.mappa.grange, BPPARAM = bp.param)
         res <- res <- data.frame(do.call(Map, c(rbind, res)))
         save(res, file=rcfile)
