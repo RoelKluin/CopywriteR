@@ -509,9 +509,9 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 						   prefixes[1], chromosomes, .peakCutoff,
 						   destination.folder, BPPARAM = bp.param)
     	print("Running DetectPeaks done");
+    	# bp.param <- current.bp.param
+	    lapply(to.log, flog.info)
 	}
-    # bp.param <- current.bp.param
-    lapply(to.log, flog.info)
 
     ## Read count statistics
     Stats.3 <- function(sample.files, GC.mappa.grange) {
