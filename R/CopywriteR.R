@@ -1,6 +1,6 @@
 CopywriteR <- function(sample.control, destination.folder, reference.folder,
                        bp.param, capture.regions.file,
-                       keep.intermediary.files = FALSE) {
+                       keep.intermediary.files = FALSE, verbosity=100) {
 
     ##########################
     ## Check and initialise ##
@@ -288,10 +288,12 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 
         save(res, file=rcfile)
     }
-    statistics <- res[, "records", drop = FALSE]
-    rownames(statistics) <- sample.files
-    statistics[, "total"] <- statistics$records
-    statistics[, "records"] <- NULL
+    if (verbosity > 5) {
+		statistics <- res[, "records", drop = FALSE]
+		rownames(statistics) <- sample.files
+		statistics[, "total"] <- statistics$records
+		statistics[, "records"] <- NULL
+	}
 
     ## Create new .bam list
     setwd(file.path(destination.folder, "BamBaiPeaksFiles"))
@@ -304,12 +306,14 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     Stats.2 <- function(sample.files) {
         countBam(sample.files)$records
     }
-    if (!any(grepl("records", names(res)))) {
+    if (!any(grepl("total", names(res)))) {
         res <- bplapply(sample.files, Stats.2, BPPARAM = bp.param)
         res <- Reduce(function(x,y) {rbind(x,y)}, res)
         save(res, file=rcfile)
     }
-    statistics[, "total.properreads"] <- res
+    if (verbosity > 5) {
+		statistics[, "total.properreads"] <- res
+	}
 
     ## Create list with numbers of controls
     control.uniq.indices <- unique(control.indices)
@@ -512,8 +516,10 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
         res <- res <- data.frame(do.call(Map, c(rbind, res)))
         save(res, file=rcfile)
     }
-    statistics[, "unmappable.or.mitochondrial"] <- res$all.reads - res$chrom.reads
-    statistics[, "on.chromosomes"] <- res$chrom.reads
+    if (verbosity > 5) {
+		statistics[, "unmappable.or.mitochondrial"] <- res$all.reads - res$chrom.reads
+		statistics[, "on.chromosomes"] <- res$chrom.reads
+	}
 
     ## Calculate coverage
     i <- c(seq_along(sample.indices))
@@ -634,13 +640,15 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
     
     sapply(res[[4]], flog.info)
 
-    ## Read count statistics
-    statistics[, "off.target"] <- unlist(res[5])
-    statistics[, "on.target"] <- statistics$on.chromosomes - statistics$off.target
-    statistics$on.chromosomes <- NULL
-    flog.info(paste("The following number of sequence reads were found in the",
-                    "samples analyzed by CopywriteR:"), statistics,
-              capture = TRUE)
+    if (verbosity > 5) {
+		## Read count statistics
+		statistics[, "off.target"] <- unlist(res[5])
+		statistics[, "on.target"] <- statistics$on.chromosomes - statistics$off.target
+		statistics$on.chromosomes <- NULL
+		flog.info(paste("The following number of sequence reads were found in the",
+						"samples analyzed by CopywriteR:"), statistics,
+				  capture = TRUE)
+	}
 
     write.table(read.counts[mixedorder(read.counts$Chromosome), ],
                 file = file.path(destination.folder, "read_counts.txt"),
