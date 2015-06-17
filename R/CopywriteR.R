@@ -278,6 +278,7 @@ CopywriteR <- function(sample.control, destination.folder, reference.folder,
 		for (i in seq_along(sample.files)) {
 			flog.info(paste0("Paired-end sequencing for sample ", sample.files[i],
 							 ": ", is.paired.end[i]))
+		}
 
 		## Remove anomalous reads and reads with Phred < 37
 		i <- c(seq_along(sample.paths))
